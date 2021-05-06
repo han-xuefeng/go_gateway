@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/e421083458/golang_common/lib"
 	"github.com/gin-gonic/gin"
 	"github.com/han-xuefeng/go_gateway/dao"
 	"github.com/han-xuefeng/go_gateway/dto"
 	"github.com/han-xuefeng/go_gateway/middleware"
+	"github.com/han-xuefeng/go_gateway/public"
 )
 
 type ServiceController struct {
@@ -48,12 +50,41 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 		return
 	}
 	out := &dto.ServiceListOutput{}
-	outList := []dto.ServiceListItemOutput{}
+	var outList []dto.ServiceListItemOutput
 	for _,listItem := range list {
+		serviceDetail,err := listItem.ServiceDetail(c, tx, &listItem)
+		if err != nil {
+			middleware.ResponseError(c, 2003, err)
+			return
+		}
+		serviceAddr := "unknow"
+		clusterIp := lib.GetStringConf("base.cluster.cluster_ip")
+		clusterPort := lib.GetStringConf("base.cluster.cluster_port")
+		clusterSslPort := lib.GetStringConf("base.cluster.cluster_ssl_port")
+
+		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypePreFixUrl && serviceDetail.HttpRule.NeedHttps == 0{
+			serviceAddr = clusterIp + clusterPort + serviceDetail.HttpRule.Rule
+		}
+		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypePreFixUrl && serviceDetail.HttpRule.NeedHttps == 1{
+			serviceAddr = clusterIp + clusterSslPort + serviceDetail.HttpRule.Rule
+		}
+		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypeDomain{
+			serviceAddr = serviceDetail.HttpRule.Rule
+		}
+
+		if serviceDetail.Info.LoadType == public.LoadTypeTcp{
+			serviceAddr = clusterIp + clusterPort
+		}
+
+		if serviceDetail.Info.LoadType == public.LoadTypeGrpc{
+			serviceAddr = fmt.Sprintf("%s:%d", clusterIp,serviceDetail.GRPCRule.Port)
+		}
+
 		outListItem := dto.ServiceListItemOutput{
-			Id: listItem.Id,
+			ID: listItem.ID,
 			ServiceName: listItem.ServiceName,
-			ServiceDesc: listItem.ServiceName,
+			ServiceDesc: listItem.ServiceDesc,
+			ServiceAddr: serviceAddr,
 		}
 		outList = append(outList, outListItem)
 	}

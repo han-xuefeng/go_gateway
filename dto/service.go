@@ -16,7 +16,7 @@ func (param *ServiceListInput) BindValidParam(c *gin.Context) error {
 }
 
 type ServiceListItemOutput struct {
-	Id          int    `json:"id" form:"id"`
+	ID          int64    `json:"id" form:"id"`
 	LoadType    int    `json:"load_type" `
 	ServiceName string `json:"salt" `
 	ServiceDesc string `json:"service_desc" `
