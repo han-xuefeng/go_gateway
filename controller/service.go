@@ -63,10 +63,10 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 		clusterSslPort := lib.GetStringConf("base.cluster.cluster_ssl_port")
 
 		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypePreFixUrl && serviceDetail.HttpRule.NeedHttps == 0{
-			serviceAddr = clusterIp + clusterPort + serviceDetail.HttpRule.Rule
+			serviceAddr = clusterIp + ":" + clusterPort + serviceDetail.HttpRule.Rule
 		}
 		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypePreFixUrl && serviceDetail.HttpRule.NeedHttps == 1{
-			serviceAddr = clusterIp + clusterSslPort + serviceDetail.HttpRule.Rule
+			serviceAddr = clusterIp + ":" + clusterSslPort + serviceDetail.HttpRule.Rule
 		}
 		if serviceDetail.Info.LoadType == public.LoadTypeHttp && serviceDetail.HttpRule.RuleType == public.HttpRuleTypeDomain{
 			serviceAddr = serviceDetail.HttpRule.Rule
@@ -79,12 +79,13 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 		if serviceDetail.Info.LoadType == public.LoadTypeGrpc{
 			serviceAddr = fmt.Sprintf("%s:%d", clusterIp,serviceDetail.GRPCRule.Port)
 		}
-
+		ipList := serviceDetail.LoadBalanceRule.GetIPListByModel()
 		outListItem := dto.ServiceListItemOutput{
 			ID: listItem.ID,
 			ServiceName: listItem.ServiceName,
 			ServiceDesc: listItem.ServiceDesc,
 			ServiceAddr: serviceAddr,
+			TotalNode: len(ipList),
 		}
 		outList = append(outList, outListItem)
 	}
