@@ -76,3 +76,16 @@ func (t *ServiceInfo)PageList(c *gin.Context,tx *gorm.DB, param *dto.ServiceList
 	query.Limit(param.PageSize).Offset(offset).Count(&total)
 	return list, total, nil
 }
+
+func (t *ServiceInfo)Find(c *gin.Context, tx *gorm.DB, info *ServiceInfo) (*ServiceInfo, error) {
+	out := &ServiceInfo{}
+	err := tx.SetCtx(public.GetGinTraceContext(c)).Where(info).Find(out).Error
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (t *ServiceInfo)Save(c *gin.Context, tx *gorm.DB) error {
+	return tx.SetCtx(public.GetGinTraceContext(c)).Save(t).Error
+}
