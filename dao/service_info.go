@@ -52,11 +52,11 @@ func (t *ServiceInfo) ServiceDetail(c *gin.Context, tx *gorm.DB, search *Service
 	}
 	detail := &ServiceDetail{
 		Info:              search,
-		HttpRule:          httpRule,
+		HTTPRule:          httpRule,
 		TCPRule:           tcpRule,
 		GRPCRule:          grpcRule,
-		LoadBalanceRule:   loadBalance,
-		AccessControlRule: accessControl,
+		LoadBalance:   loadBalance,
+		AccessControl: accessControl,
 	}
 	return detail, nil
 }
