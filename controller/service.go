@@ -97,12 +97,20 @@ func (service *ServiceController) ServiceList(c *gin.Context) {
 		}
 
 		ipList := serviceDetail.LoadBalance.GetIPListByModel()
+		counter, err := public.FlowCounterHandler.GetCounter(public.FlowServicePrefix + listItem.ServiceName)
+		if err != nil {
+			middleware.ResponseError(c, 2004, err)
+			return
+		}
 		outListItem := dto.ServiceListItemOutput{
-			ID: listItem.ID,
+			ID:          listItem.ID,
+			LoadType:    listItem.LoadType,
 			ServiceName: listItem.ServiceName,
 			ServiceDesc: listItem.ServiceDesc,
 			ServiceAddr: serviceAddr,
-			TotalNode: len(ipList),
+			Qps:         counter.QPS,
+			Qpd:         counter.TotalCount,
+			TotalNode:   len(ipList),
 		}
 		outList = append(outList, outListItem)
 	}
